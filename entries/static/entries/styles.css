@@ -1,0 +1,174 @@
+body {
+    display: flex;
+    flex-direction: column;
+    background-color: #1f1f1f;
+    padding: 0px;
+    margin: 0px;
+}
+
+.page-banner {
+    background-color: #272727;   /* Dunkelblau */
+    color: white;
+    margin: 0px;
+    padding: 20px;
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+    box-shadow: 0 10px 25px 0px rgb(12, 12, 12);
+}
+
+.my-save-data-banner {
+    background-color: #272727;   /* Dunkelblau */
+    color: white;
+    margin-top: 20px;
+    margin-left: 0px;
+    margin-right: 0px;
+    padding: 20px;
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+    box-shadow: 0 10px 25px 0px rgb(12, 12, 12);
+}
+
+h1 {
+    color: #dddddd;
+    margin: 5px;
+}
+
+p {
+    color: #dddddd;
+}
+
+th {
+    color: #dddddd;
+}
+
+td {
+    color: #dddddd;
+}
+
+.status.open {
+    text-align: center;
+    color: orange;
+}
+
+.status.applied {
+    text-align: center;
+    color: green;
+}
+
+.status.rejected {
+    text-align: center;
+    color: red;
+}
+
+input::placeholder {
+    text-align: left;
+}
+
+.adzunaform {
+    background-color: #272727;
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+    margin-top: 40px;
+    margin-left: 20px;
+    margin-right: 20px;
+    border-radius: 10px;
+    gap: 5px;
+    box-shadow: 0 10px 25px 0px rgb(12, 12, 12);
+}
+
+.form {
+    background-color: #272727;
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+    margin-top: 40px;
+    margin-bottom: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
+    border-radius: 10px;
+    gap: 5px;
+    box-shadow: 0 10px 25px 0px rgb(12, 12, 12);
+}
+
+.tablebox {
+    background-color: #272727;
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+    margin-left: 20px;
+    margin-right: 20px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px 0px rgb(12, 12, 12);
+
+}
+
+.table {
+    table-layout: fixed;
+    border-collapse: collapse;
+    width: 100%;
+    margin: 20px;
+}
+
+.adzuna-table {
+    table-layout: fixed;
+    border-collapse: collapse;
+    width: 100%;
+    margin: 20px;
+}
+
+.adzuna-table td:nth-child(1), th:nth-child(1), td:nth-child(5), th:nth-child(5) {
+    width: 10%;
+}
+
+.table, th, td {
+    border-style: solid;
+    border-width: 0.5px;
+    border-color: aliceblue;
+    border-radius: 5px;
+}
+
+th {
+    white-space: nowrap;
+}
+
+
+.table td:nth-child(1), .table td:nth-child(2), .table td:nth-child(3), .table td:nth-child(4) {
+    width: 10%;
+}
+
+.tabletd:nth-child(5), .table td:nth-child(6), .table td:nth-child(7) {
+    text-align: center;
+    width: 5%;
+}
+
+.noEntriesFound {
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+}
+
+thead {
+    width: 10%;
+    background-color: #1b1b1b;
+}
+
+tr:hover {
+    background-color: #3b3b3b;
+}
+
+.details-row {
+    display: none;
+}
+
+.details-row.open {
+    display: table-row;
+}
+
+.details-row td {
+    white-space: normal;
+    word-wrap: break-word;
+    color: #FFFAFA;
+}

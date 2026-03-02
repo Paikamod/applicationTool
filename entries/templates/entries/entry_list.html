@@ -1,0 +1,180 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{% static 'entries/styles.css' %}">
+    <link rel="icon" type="image/png" href="{% static 'entries/favicon.png' %}">
+    <title>Applications</title>
+</head>
+<body>
+    <div class="page-banner">
+        <h1>Applications</h1>
+    </div>
+    <div class="adzunaform">
+        <form method="get" action="{% url 'adzuna' %}">
+            <input type="text" name="adzuna_jobtitle" placeholder="Adzuna Jobtitle" autocomplete="off">
+            <input type="text" name="adzuna_location" placeholder="Adzuna Location" autocomplete="off">
+            <button>Adzuna search</button>
+        </form>
+    </div>
+
+
+
+
+
+    <div class="tablebox">
+        <table class="adzuna-table" cellpadding="5">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Company</th>
+                    <th>Address</th>
+                    <th>Jobtitle</th>
+                    <th>Add to my list</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr class="job-row" onclick="toggleRow('details-{{ forloop.counter }}')">
+                    <td>{{ job.created|slice:":10" }}
+                    <td>{{ job.company.display_name }}</td>
+                    <td>{{ job.location.display_name }}</td>
+                    <td>{{ job.title }}</td>
+                    <td>
+                        <form method="post" action="{% url 'add_entry_by_adzuna' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="company_name" value="{{ job.company.display_name }}">
+                            <input type="hidden" name="address" value="{{ job.location.display_name }}">
+                            <input type="hidden" name="jobtitle" value="{{ job.title }}">
+
+                            <input type="hidden" name="adzuna_jobtitle" value="{{ request.GET.adzuna_jobtitle }}">
+                            <input type="hidden" name="adzuna_location" value="{{ request.GET.adzuna_location }}">
+                            {% if not job.already_added %}
+                                <input type="checkbox" onclick="this.form.submit()">
+                            {% endif %}
+                        </form>
+                    </td>
+                </tr>
+                <tr id="details-{{ forloop.counter }}" class="details-row">
+                    <td colspan="5">
+                        <strong>Salary:</strong>
+                        {{ job.salary_min }} - {{ job.salary_max }}<br>
+
+                        <strong>Description:</strong><br>
+                        {{ job.description }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td class="noEntriesFound" colspan="5">No results found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <div class="form">
+        <form method="post" action="{% url 'add_entry_by_form' %}">
+            {% csrf_token %}
+            <input type="text" name="company_name" placeholder="Company name" autocomplete="off">
+            <input type="text" name="address" placeholder="Address" autocomplete="off">
+            <input type="text" name="jobtitle" placeholder="Jobtitle" autocomplete="off">
+            <button>ok</button>
+        </form>
+        <form method="post" action="{% url 'open_all_view' %}">
+            {% csrf_token %}
+            <button>open_all</button>
+        </form>
+        <form method="post" action="{% url 'delete_all_entries' %}">
+            {% csrf_token %}
+            <button>delete_all</button>
+        </form>
+    </div>
+    <div class="my-save-data-banner">
+        <h1>My Saved Data</h1>
+    </div>
+    <div class="tablebox">
+        <table class="table" cellpadding="8">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Company</th>
+                    <th>Address</th>
+                    <th>Jobtitle</th>
+                    <th>Status</th>
+                    <th>Applied</th>
+                    <th>Rejected</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                <tr>
+                    <td>
+                        {% if entry.status_date %}
+                            {{ entry.status_date }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>{{ entry.company_name }}</td>
+                    <td>{{ entry.address }}</td>
+                    <td>{{ entry.jobtitle }}</td>
+                    <td class="status {{ entry.status }}">{{ entry.status }}</td>
+                    <td>
+                        {% if entry.status == "open" %}
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="entry_id" value="{{ entry.id }}">
+                                <input type="hidden" name="status" value="applied">
+
+                                <input type="checkbox" onclick="this.form.submit()">
+                            </form>
+                        {% elif entry.status == "applied" %}
+                                {% csrf_token %}
+                                <input type="hidden" name="entry_id" value="{{ entry.id }}">
+                                <input type="hidden" name="status" value="applied">
+
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if entry.status == "applied" %}
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="entry_id" value="{{ entry.id }}">
+                                <input type="hidden" name="status" value="rejected">
+
+                                <input type="checkbox" onclick="this.form.submit()">
+                            </form>
+                        {% elif entry.status == "rejected" %}
+
+                        {% else %}
+                                <input type="checkbox" disabled="disabled">
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td class="noEntriesFound" colspan="8">No entries found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+<script>
+    function toggleRow(id) {
+        const row = document.getElementById(id);
+        if (row.style.display === "table-row") {
+            row.style.display = "none";
+        }
+        else {
+            row.style.display = "table-row"
+        }
+    }
+</script>
+</html>
