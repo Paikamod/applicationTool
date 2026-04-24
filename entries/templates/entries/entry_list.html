@@ -67,21 +67,22 @@
     </div>
 
     <div class="form">
-        <form method="post" action="{% url 'add_entry_by_form' %}">
+        <!--
+            GEÄNDERT: kein action/method mehr auf dem form.
+            Felder haben jetzt IDs damit JS sie lesen kann.
+            Button ist type="button" damit kein normaler Submit ausgelöst wird.
+        -->
+        <form id="manual-entry-form">
             {% csrf_token %}
-            <input type="text" name="company_name" placeholder="Company name" autocomplete="off">
-            <input type="text" name="address" placeholder="Address" autocomplete="off">
-            <input type="text" name="jobtitle" placeholder="Jobtitle" autocomplete="off">
-            <button>ok</button>
+            <input type="text" id="input-company" name="company_name" placeholder="Company name" autocomplete="off">
+            <input type="text" id="input-address" name="address" placeholder="Address" autocomplete="off">
+            <input type="text" id="input-jobtitle" name="jobtitle" placeholder="Jobtitle" autocomplete="off">
+            <button type="button" id="btn-add-entry">ok</button>
         </form>
-        <form method="post" action="{% url 'open_all_view' %}">
-            {% csrf_token %}
-            <button>open_all</button>
-        </form>
-        <form method="post" action="{% url 'delete_all_entries' %}">
-            {% csrf_token %}
-            <button>delete_all</button>
-        </form>
+
+        <!-- GEÄNDERT: open_all und delete_all sind jetzt einfache Buttons, kein Form mehr -->
+        <button id="btn-open-all">open_all</button>
+        <button id="btn-delete-all">delete_all</button>
     </div>
 
     <div class="my-save-data-banner">
@@ -156,7 +157,68 @@
             });
     }
 
-    // Ein einziger Event-Listener für alle Checkboxen (Event Delegation)
+    // GEÄNDERT: manuelles Form per fetch statt normalem Submit
+    // Felder werden nach dem Speichern geleert, Adzuna-Tabelle bleibt erhalten
+    document.getElementById("btn-add-entry").addEventListener("click", function () {
+        const company = document.getElementById("input-company").value;
+        const address = document.getElementById("input-address").value;
+        const jobtitle = document.getElementById("input-jobtitle").value;
+
+        // Pflichtfelder prüfen im Frontend – kein Request wenn leer
+        if (!company || !jobtitle) {
+            return;
+        }
+
+        fetch("{% url 'add_entry_by_form' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-CSRFToken": getCookie("csrftoken")
+            },
+            // als URL-encoded String schicken wie ein normales HTML-Form
+            body: `company_name=${encodeURIComponent(company)}&address=${encodeURIComponent(address)}&jobtitle=${encodeURIComponent(jobtitle)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Felder leeren nach erfolgreichem Speichern
+                document.getElementById("input-company").value = "";
+                document.getElementById("input-address").value = "";
+                document.getElementById("input-jobtitle").value = "";
+                reloadEntries();
+            }
+        });
+    });
+
+    // GEÄNDERT: open_all per fetch statt Form-Submit
+    document.getElementById("btn-open-all").addEventListener("click", function () {
+        fetch("{% url 'open_all_view' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCookie("csrftoken")
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) reloadEntries();
+        });
+    });
+
+    // GEÄNDERT: delete_all per fetch statt Form-Submit
+    document.getElementById("btn-delete-all").addEventListener("click", function () {
+        fetch("{% url 'delete_all_entries' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCookie("csrftoken")
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) reloadEntries();
+        });
+    });
+
+    // Ein einziger Event-Listener für alle dynamischen Checkboxen (Event Delegation)
     document.addEventListener("change", function (e) {
 
         // APPLY
@@ -195,7 +257,7 @@
             });
         }
 
-        // ADD ENTRY FROM ADZUNA (war vorher mit .forEach - jetzt auch hier drin)
+        // ADD ENTRY FROM ADZUNA
         if (e.target.classList.contains("add-entry-checkbox")) {
             const company = e.target.dataset.company;
             const address = e.target.dataset.address;
@@ -215,9 +277,8 @@
             })
             .then(response => response.json())
             .then(data => {
-
                 if (data.success) {
-                    e.target.remove()
+                    e.target.remove();
                     reloadEntries();
                 }
             });

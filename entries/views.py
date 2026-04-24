@@ -37,22 +37,32 @@ def add_entry_by_form(request):
 
     for field in REQUIRED_FIELDS:
         if not data.get(field):
-            return redirect("entry_list")  # einfach zurück, nichts speichern
+            # GEÄNDERT: statt ValueError -> JsonResponse mit Fehler
+            # damit fetch() einen sauberen Response bekommt
+            return JsonResponse({"success": False, "error": f"{field} is required"})
+
+    # Leere Felder (z.B. address) aus data entfernen damit kein leerer String gespeichert wird
+    data = {k: v for k, v in data.items() if v != ""}
 
     add_entry(**data)
-    return redirect("entry_list")
+
+    # GEÄNDERT: statt redirect -> JsonResponse
+    # weil wir jetzt per fetch aufrufen und kein Redirect brauchen
+    return JsonResponse({"success": True})
 
 
 def open_all_view(request):
     status_open_all()
 
-    return redirect("entry_list")
+    # GEÄNDERT: statt redirect -> JsonResponse
+    return JsonResponse({"success": True})
 
 
 def delete_all_entries(request):
     delete_all()
 
-    return redirect("entry_list")
+    # GEÄNDERT: statt redirect -> JsonResponse
+    return JsonResponse({"success": True})
 
 
 def adzuna(request):
@@ -60,12 +70,11 @@ def adzuna(request):
     location = request.GET.get("adzuna_location")
 
     jobs = []
-    entries = list_entries()  # Nur EIN Query
+    entries = list_entries()
 
     if jobtitle and location:
         jobs = adzuna_search(jobtitle, location)
 
-        # 🔹 Bestehende Einträge normalisiert vorbereiten
         existing_entries = {
             (
                 e.company_name.strip().lower(),
@@ -74,7 +83,6 @@ def adzuna(request):
             for e in entries
         }
 
-        # 🔹 Jobs markieren
         for job in jobs:
             company = job.get("company", {}).get("display_name", "")
             title = job.get("title", "")
@@ -98,7 +106,6 @@ def adzuna(request):
 
 def add_entry_by_adzuna(request):
     if request.method == "POST":
-
         data = json.loads(request.body)
 
         add_entry(
@@ -111,7 +118,6 @@ def add_entry_by_adzuna(request):
 
 
 def entries_api(request):
-
     entries = list_entries()
 
     data = []
@@ -132,9 +138,7 @@ def entries_api(request):
 
 
 def change_status_api(request):
-
     if request.method == "POST":
-
         data = json.loads(request.body)
 
         entry = Entry.objects.get(id=data["entry_id"])
