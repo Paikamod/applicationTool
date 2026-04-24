@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 *.pyo
+.vscode/
 
 # Django
 db.sqlite3
@@ -9,5 +10,9 @@ db.sqlite3
 
 # Umgebung
 .env
+venv/
+env/
+data.csv
+entries.json
 
 Learnings/
