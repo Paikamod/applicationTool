@@ -35,18 +35,11 @@ def add_entry_by_form(request):
     data = request.POST.dict()
     data.pop("csrfmiddlewaretoken", None)
 
-    print(data)
-
     for field in REQUIRED_FIELDS:
         if not data.get(field):
-            raise ValueError(f"{field} is required")
-
-    """for key, value in data.items():
-        if value == "":
-            data[key] = "X"""
+            return redirect("entry_list")  # einfach zurück, nichts speichern
 
     add_entry(**data)
-
     return redirect("entry_list")
 
 
@@ -115,7 +108,8 @@ def add_entry_by_adzuna(request):
         )
 
         return JsonResponse({"success": True})
-    
+
+
 def entries_api(request):
 
     entries = list_entries()
@@ -123,16 +117,19 @@ def entries_api(request):
     data = []
 
     for e in entries:
-        data.append({
-            "id": e.id,
-            "company_name": e.company_name,
-            "address": e.address,
-            "jobtitle": e.jobtitle,
-            "status": e.status,
-            "status_date": str(e.status_date)
-        })
+        data.append(
+            {
+                "id": e.id,
+                "company_name": e.company_name,
+                "address": e.address,
+                "jobtitle": e.jobtitle,
+                "status": e.status,
+                "status_date": str(e.status_date),
+            }
+        )
 
     return JsonResponse({"entries": data})
+
 
 def change_status_api(request):
 
