@@ -1,6 +1,13 @@
 from datetime import date
 from .models import Entry
 import requests
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+api_key = os.getenv("ADZUNA_KEY")
+api_id = os.getenv("ADZUNA_ID")
 
 
 def add_entry(**data):
@@ -80,8 +87,8 @@ def delete_all():
 def adzuna_search(keyword, location):
     url = f"https://api.adzuna.com/v1/api/jobs/de/search/1"
     params = {
-        "app_id": "",
-        "app_key": "",
+        "app_id": api_id,
+        "app_key": api_key,
         "results_per_page": 100,
         "what": keyword,
         "where": location,

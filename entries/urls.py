@@ -6,6 +6,8 @@ from .views import (
     delete_all_entries,
     adzuna,
     add_entry_by_adzuna,
+    entries_api,
+    change_status_api,
 )
 
 urlpatterns = [
@@ -15,4 +17,6 @@ urlpatterns = [
     path("deleteallentries/", delete_all_entries, name="delete_all_entries"),
     path("adzuna/", adzuna, name="adzuna"),
     path("addentrybyadzuna/", add_entry_by_adzuna, name="add_entry_by_adzuna"),
+    path("entriesapi/", entries_api, name="entries_api"),
+    path("changestatusapi/", change_status_api, name="change_status_api"),
 ]

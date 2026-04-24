@@ -1,4 +1,6 @@
+import json
 from django.shortcuts import render, redirect
+from django.http import JsonResponse
 from .services import (
     list_entries,
     add_entry,
@@ -102,27 +104,48 @@ def adzuna(request):
 
 
 def add_entry_by_adzuna(request):
-    REQUIRED_FIELDS = ["company_name", "jobtitle"]
+    if request.method == "POST":
 
-    data = request.POST.dict()
-    data.pop("csrfmiddlewaretoken", None)
+        data = json.loads(request.body)
 
-    job_search = data.pop("adzuna_jobtitle", None)
-    location_search = data.pop("adzuna_location", None)
+        add_entry(
+            company_name=data.get("company_name"),
+            address=data.get("address"),
+            jobtitle=data.get("jobtitle"),
+        )
 
-    for field in REQUIRED_FIELDS:
-        if not data.get(field):
-            raise ValueError(f"{field} is required")
+        return JsonResponse({"success": True})
+    
+def entries_api(request):
 
-    """for key, value in data.items():
-        if value == "":
-            data[key] = "X"""
+    entries = list_entries()
 
-    add_entry(**data)
+    data = []
 
-    jobtitle = request.POST.get("adzuna_jobtitle")
-    location = request.POST.get("adzuna_location")
+    for e in entries:
+        data.append({
+            "id": e.id,
+            "company_name": e.company_name,
+            "address": e.address,
+            "jobtitle": e.jobtitle,
+            "status": e.status,
+            "status_date": str(e.status_date)
+        })
 
-    return redirect(
-        f"/entries/adzuna/?adzuna_jobtitle={job_search}&adzuna_location={location_search}"
-    )
+    return JsonResponse({"entries": data})
+
+def change_status_api(request):
+
+    if request.method == "POST":
+
+        data = json.loads(request.body)
+
+        entry = Entry.objects.get(id=data["entry_id"])
+        entry.status = data["status"]
+
+        if data["status"] == "applied":
+            entry.status_date = date.today()
+
+        entry.save()
+
+        return JsonResponse({"success": True})

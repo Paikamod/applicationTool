@@ -119,9 +119,15 @@ input::placeholder {
     margin: 20px;
 }
 
+.adzuna-table td:nth-child(5) {
+    text-align: center;
+}
+
 .adzuna-table td:nth-child(1), th:nth-child(1), td:nth-child(5), th:nth-child(5) {
     width: 10%;
 }
+
+
 
 .table, th, td {
     border-style: solid;
@@ -158,6 +164,8 @@ thead {
 tr:hover {
     background-color: #3b3b3b;
 }
+
+
 
 .details-row {
     display: none;

@@ -19,10 +19,6 @@
         </form>
     </div>
 
-
-
-
-
     <div class="tablebox">
         <table class="adzuna-table" cellpadding="5">
             <thead>
@@ -37,30 +33,26 @@
             <tbody>
                 {% for job in jobs %}
                 <tr class="job-row" onclick="toggleRow('details-{{ forloop.counter }}')">
-                    <td>{{ job.created|slice:":10" }}
+                    <td>{{ job.created|slice:":10" }}</td>
                     <td>{{ job.company.display_name }}</td>
                     <td>{{ job.location.display_name }}</td>
                     <td>{{ job.title }}</td>
                     <td>
-                        <form method="post" action="{% url 'add_entry_by_adzuna' %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="company_name" value="{{ job.company.display_name }}">
-                            <input type="hidden" name="address" value="{{ job.location.display_name }}">
-                            <input type="hidden" name="jobtitle" value="{{ job.title }}">
-
-                            <input type="hidden" name="adzuna_jobtitle" value="{{ request.GET.adzuna_jobtitle }}">
-                            <input type="hidden" name="adzuna_location" value="{{ request.GET.adzuna_location }}">
-                            {% if not job.already_added %}
-                                <input type="checkbox" onclick="this.form.submit()">
-                            {% endif %}
-                        </form>
+                        {% if not job.already_added %}
+                            <input
+                                type="checkbox"
+                                class="add-entry-checkbox"
+                                data-company="{{ job.company.display_name }}"
+                                data-address="{{ job.location.display_name }}"
+                                data-title="{{ job.title }}"
+                            >
+                        {% endif %}
                     </td>
                 </tr>
                 <tr id="details-{{ forloop.counter }}" class="details-row">
                     <td colspan="5">
                         <strong>Salary:</strong>
                         {{ job.salary_min }} - {{ job.salary_max }}<br>
-
                         <strong>Description:</strong><br>
                         {{ job.description }}
                     </td>
@@ -73,10 +65,6 @@
             </tbody>
         </table>
     </div>
-
-
-
-
 
     <div class="form">
         <form method="post" action="{% url 'add_entry_by_form' %}">
@@ -95,9 +83,11 @@
             <button>delete_all</button>
         </form>
     </div>
+
     <div class="my-save-data-banner">
         <h1>My Saved Data</h1>
     </div>
+
     <div class="tablebox">
         <table class="table" cellpadding="8">
             <thead>
@@ -111,70 +101,138 @@
                     <th>Rejected</th>
                 </tr>
             </thead>
-            <tbody>
-                {% for entry in entries %}
-                <tr>
-                    <td>
-                        {% if entry.status_date %}
-                            {{ entry.status_date }}
-                        {% else %}
-                            —
-                        {% endif %}
-                    </td>
-                    <td>{{ entry.company_name }}</td>
-                    <td>{{ entry.address }}</td>
-                    <td>{{ entry.jobtitle }}</td>
-                    <td class="status {{ entry.status }}">{{ entry.status }}</td>
-                    <td>
-                        {% if entry.status == "open" %}
-                            <form method="post">
-                                {% csrf_token %}
-                                <input type="hidden" name="entry_id" value="{{ entry.id }}">
-                                <input type="hidden" name="status" value="applied">
-
-                                <input type="checkbox" onclick="this.form.submit()">
-                            </form>
-                        {% elif entry.status == "applied" %}
-                                {% csrf_token %}
-                                <input type="hidden" name="entry_id" value="{{ entry.id }}">
-                                <input type="hidden" name="status" value="applied">
-
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if entry.status == "applied" %}
-                            <form method="post">
-                                {% csrf_token %}
-                                <input type="hidden" name="entry_id" value="{{ entry.id }}">
-                                <input type="hidden" name="status" value="rejected">
-
-                                <input type="checkbox" onclick="this.form.submit()">
-                            </form>
-                        {% elif entry.status == "rejected" %}
-
-                        {% else %}
-                                <input type="checkbox" disabled="disabled">
-                        {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td class="noEntriesFound" colspan="8">No entries found.</td>
-                </tr>
-                {% endfor %}
+            <tbody id="entries-table-body">
             </tbody>
         </table>
     </div>
 </body>
 <script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function reloadEntries() {
+        fetch("{% url 'entries_api' %}")
+            .then(response => response.json())
+            .then(data => {
+                const table = document.getElementById("entries-table-body");
+                table.innerHTML = "";
+
+                data.entries.forEach(entry => {
+                    let appliedCheckbox = "";
+                    let rejectedCheckbox = "";
+
+                    if (entry.status === "open") {
+                        appliedCheckbox = `<input type="checkbox" class="apply-checkbox" data-id="${entry.id}">`;
+                    }
+                    if (entry.status === "applied") {
+                        rejectedCheckbox = `<input type="checkbox" class="reject-checkbox" data-id="${entry.id}">`;
+                    }
+
+                    const row = `
+                        <tr>
+                            <td>${entry.status_date ?? "—"}</td>
+                            <td>${entry.company_name}</td>
+                            <td>${entry.address}</td>
+                            <td>${entry.jobtitle}</td>
+                            <td class="status ${entry.status}">${entry.status}</td>
+                            <td>${appliedCheckbox}</td>
+                            <td>${rejectedCheckbox}</td>
+                        </tr>
+                    `;
+                    table.innerHTML += row;
+                });
+            });
+    }
+
+    // Ein einziger Event-Listener für alle Checkboxen (Event Delegation)
+    document.addEventListener("change", function (e) {
+
+        // APPLY
+        if (e.target.classList.contains("apply-checkbox")) {
+            const id = e.target.dataset.id;
+
+            fetch("{% url 'change_status_api' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify({ entry_id: id, status: "applied" })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) reloadEntries();
+            });
+        }
+
+        // REJECT
+        if (e.target.classList.contains("reject-checkbox")) {
+            const id = e.target.dataset.id;
+
+            fetch("{% url 'change_status_api' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify({ entry_id: id, status: "rejected" })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) reloadEntries();
+            });
+        }
+
+        // ADD ENTRY FROM ADZUNA (war vorher mit .forEach - jetzt auch hier drin)
+        if (e.target.classList.contains("add-entry-checkbox")) {
+            const company = e.target.dataset.company;
+            const address = e.target.dataset.address;
+            const title = e.target.dataset.title;
+
+            fetch("{% url 'add_entry_by_adzuna' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify({
+                    company_name: company,
+                    address: address,
+                    jobtitle: title
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+
+                if (data.success) {
+                    e.target.remove()
+                    reloadEntries();
+                }
+            });
+        }
+    });
+
     function toggleRow(id) {
         const row = document.getElementById(id);
         if (row.style.display === "table-row") {
             row.style.display = "none";
-        }
-        else {
-            row.style.display = "table-row"
+        } else {
+            row.style.display = "table-row";
         }
     }
+
+    reloadEntries();
 </script>
 </html>
